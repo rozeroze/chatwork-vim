@@ -3,7 +3,7 @@
 " Summary: kick chatwork api from Vim
 " Authors: rozeroze <rosettastone1886@gmail.com>
 " License: MIT
-" Version: 1.1.0
+" Version: 1.1.1
 
 
 " MEMO: http://developer.chatwork.com/ja/endpoints.html
@@ -17,6 +17,7 @@ if exists('g:chatwork_type')
    let s:showtype = g:chatwork_type
 endif
 let s:strftime = exists('*strftime')
+let s:rooms = []
 " }}}
 " secret {{{
 let s:token = '00112233445566778899aabbccddeeff'
@@ -164,16 +165,16 @@ function! chatwork#output()
     q
 endfunction
 " }}}
-
-
-" #2 unread {{{
-let s:rooms = []
+" unread <local管理ではない>
+" chatwork#getrooms() room情報を取得 {{{
 function! chatwork#getrooms()
    let s:rooms = []
    let res = webapi#http#get(s:url . 'rooms', {}, { 'x-ChatWorkToken': s:token })
    let json = webapi#json#decode(res.content)
    let s:rooms = json
 endfunction
+" }}}
+" chatwork#allrooms() すべてのroomを表示 {{{
 function! chatwork#allrooms()
    call g:chatwork#getrooms()
    call g:chatwork#open('all rooms')
@@ -185,21 +186,30 @@ function! chatwork#allrooms()
       call append(line('$'), '-----------------')
    endfor
 endfunction
+" }}}
+" chatwork#unreads() 未読メッセがあるroomを表示 {{{
 function! chatwork#unreads()
    call g:chatwork#getrooms()
+   call filter(s:rooms, 'v:val.unread_num != 0')
+   if len(s:rooms) == 0
+      echo 'all messages was already read'
+      return
+   endif
    call g:chatwork#open('unread rooms')
    for room in s:rooms
-      if room.unread_num != 0
-         let sl = []
-         call add(sl, 'id: ' . room.room_id)
-         call add(sl, 'name: ' . room.name)
-         call add(sl, 'unread: ' . room.unread_num)
-         call append(line('$'), sl)
-         call append(line('$'), '-----------------')
-      endif
+      let sl = []
+      call add(sl, 'id: ' . room.room_id)
+      call add(sl, 'name: ' . room.name)
+      call add(sl, 'unread: ' . room.unread_num)
+      call append(line('$'), sl)
+      call append(line('$'), '-----------------')
    endfor
+   nnoremap <buffer> <silent> o :call chatwork#getbyline()<CR>
+   nnoremap <buffer> <silent> x :call chatwork#getbyword()<CR>
 endfunction
-function! chatwork#roomstest()
+" }}}
+" chatwork#roomdetail() すべてのroomの詳細を表示 {{{
+function! chatwork#roomdetail()
    call g:chatwork#getrooms()
    call g:chatwork#open('test rooms')
    for room in s:rooms
@@ -210,7 +220,8 @@ function! chatwork#roomstest()
       call append(line('$'), '----------------')
    endfor
 endfunction
-" get by id
+" }}}
+" chatwork#getbyid(id) idを指定してメッセを表示 {{{
 function! chatwork#getbyid(id)
    call g:chatwork#getrooms()
    let r = {}
@@ -226,6 +237,18 @@ function! chatwork#getbyid(id)
       let json = webapi#json#decode(res.content)
       call chatwork#show('id-' . a:id , json)
    endif
+endfunction
+" }}}
+" chatwork#getbyline() current行の数値をidとして扱い、getbyid()を呼ぶ {{{
+function! chatwork#getbyline()
+   let id = substitute(getline('.'), '[^0-9]', '', 'g')
+   call g:chatwork#getbyid(id)
+endfunction
+" }}}
+" chatwork#getbyword() cursor下のwordをidとして扱い、getbyid()を呼ぶ {{{
+function! chatwork#getbyword()
+   let id = substitute(expand('<cword>'), '[^0-9]', '', 'g')
+   call g:chatwork#getbyid(id)
 endfunction
 " }}}
 
