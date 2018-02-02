@@ -3,7 +3,7 @@
 " Summary: kick chatwork api from Vim
 " Authors: rozeroze <rosettastone1886@gmail.com>
 " License: MIT
-" Version: 1.1.1
+" Last Change: 2018 Feb 2
 
 
 " MEMO: http://developer.chatwork.com/ja/endpoints.html
@@ -58,11 +58,6 @@ endfunction
 function! chatwork#open(name)
    call execute(s:showtype)
    let &l:statusline = a:name . ' - chatwork'
-   setlocal bufhidden=hide
-   setlocal buftype=nofile
-   setlocal nobuflisted
-   setlocal noreadonly
-   setlocal noswapfile
    setlocal filetype=chatwork
 endfunction
 " }}}
