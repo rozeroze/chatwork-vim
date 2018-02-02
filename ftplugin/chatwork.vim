@@ -20,9 +20,9 @@ setlocal noswapfile
 
 """ completion
 let maplocalleader = ','
-nnoremap [chatwork] <Nop>
-nmap <LocalLeader> [chatwork]
-imap <LocalLeader> [chatwork]
+nnoremap <buffer> [chatwork] <Nop>
+nmap <buffer> <LocalLeader> [chatwork]
+imap <buffer> <LocalLeader> [chatwork]
 " complete to
 nnoremap <buffer><silent> [chatwork]t i<C-R>=ChatworkCompleteTo()<CR>
 inoremap <buffer><silent> [chatwork]t <C-R>=ChatworkCompleteTo()<CR>
